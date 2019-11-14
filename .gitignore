@@ -1,0 +1,8 @@
+*
+!.gitignore
+!*.v
+!*.tex
+!*.hex
+!*.mif
+!*.pdf
+!*.

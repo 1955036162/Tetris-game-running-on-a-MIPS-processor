@@ -1,5 +1,5 @@
 Flow report for skeleton
-Thu Nov 14 00:32:27 2019
+Thu Nov 14 10:37:31 2019
 Quartus Prime Version 16.0.0 Build 211 04/27/2016 SJ Lite Edition
 
 
@@ -41,7 +41,7 @@ agreement for further details.
 +----------------------------------------------------------------------------------+
 ; Flow Summary                                                                     ;
 +------------------------------------+---------------------------------------------+
-; Flow Status                        ; Successful - Thu Nov 14 00:32:27 2019       ;
+; Flow Status                        ; Successful - Thu Nov 14 10:37:31 2019       ;
 ; Quartus Prime Version              ; 16.0.0 Build 211 04/27/2016 SJ Lite Edition ;
 ; Revision Name                      ; skeleton                                    ;
 ; Top-level Entity Name              ; skeleton                                    ;
@@ -65,7 +65,7 @@ agreement for further details.
 +-------------------+---------------------+
 ; Option            ; Setting             ;
 +-------------------+---------------------+
-; Start date & time ; 11/14/2019 00:31:20 ;
+; Start date & time ; 11/14/2019 10:35:49 ;
 ; Main task         ; Compilation         ;
 ; Revision Name     ; skeleton            ;
 +-------------------+---------------------+
@@ -76,7 +76,7 @@ agreement for further details.
 +-------------------------------------+---------------------------------------+---------------+-------------+----------------+
 ; Assignment Name                     ; Value                                 ; Default Value ; Entity Name ; Section Id     ;
 +-------------------------------------+---------------------------------------+---------------+-------------+----------------+
-; COMPILER_SIGNATURE_ID               ; 31573052518421.157370948014020        ; --            ; --          ; --             ;
+; COMPILER_SIGNATURE_ID               ; 168202125607616.157374574916200       ; --            ; --          ; --             ;
 ; EDA_OUTPUT_DATA_FORMAT              ; Verilog Hdl                           ; --            ; --          ; eda_simulation ;
 ; EDA_SIMULATION_TOOL                 ; ModelSim-Altera (Verilog)             ; <None>        ; --          ; --             ;
 ; MAX_CORE_JUNCTION_TEMP              ; 85                                    ; --            ; --          ; --             ;
@@ -103,12 +103,12 @@ agreement for further details.
 +---------------------------+--------------+-------------------------+---------------------+------------------------------------+
 ; Module Name               ; Elapsed Time ; Average Processors Used ; Peak Virtual Memory ; Total CPU Time (on all processors) ;
 +---------------------------+--------------+-------------------------+---------------------+------------------------------------+
-; Analysis & Synthesis      ; 00:00:14     ; 1.0                     ; 848 MB              ; 00:00:27                           ;
-; Fitter                    ; 00:00:33     ; 1.0                     ; 1295 MB             ; 00:00:34                           ;
-; Assembler                 ; 00:00:04     ; 1.0                     ; 779 MB              ; 00:00:04                           ;
-; TimeQuest Timing Analyzer ; 00:00:04     ; 1.0                     ; 928 MB              ; 00:00:04                           ;
-; EDA Netlist Writer        ; 00:00:03     ; 1.0                     ; 771 MB              ; 00:00:03                           ;
-; Total                     ; 00:00:58     ; --                      ; --                  ; 00:01:12                           ;
+; Analysis & Synthesis      ; 00:00:32     ; 1.0                     ; 5003 MB             ; 00:00:44                           ;
+; Fitter                    ; 00:00:40     ; 1.0                     ; 5555 MB             ; 00:00:41                           ;
+; Assembler                 ; 00:00:06     ; 1.0                     ; 4919 MB             ; 00:00:05                           ;
+; TimeQuest Timing Analyzer ; 00:00:08     ; 1.0                     ; 5080 MB             ; 00:00:07                           ;
+; EDA Netlist Writer        ; 00:00:07     ; 1.0                     ; 4910 MB             ; 00:00:05                           ;
+; Total                     ; 00:01:33     ; --                      ; --                  ; 00:01:42                           ;
 +---------------------------+--------------+-------------------------+---------------------+------------------------------------+
 
 
@@ -117,11 +117,11 @@ agreement for further details.
 +---------------------------+------------------+-----------+------------+----------------+
 ; Module Name               ; Machine Hostname ; OS Name   ; OS Version ; Processor type ;
 +---------------------------+------------------+-----------+------------+----------------+
-; Analysis & Synthesis      ; chuan            ; Windows 8 ; 6.2        ; x86_64         ;
-; Fitter                    ; chuan            ; Windows 8 ; 6.2        ; x86_64         ;
-; Assembler                 ; chuan            ; Windows 8 ; 6.2        ; x86_64         ;
-; TimeQuest Timing Analyzer ; chuan            ; Windows 8 ; 6.2        ; x86_64         ;
-; EDA Netlist Writer        ; chuan            ; Windows 8 ; 6.2        ; x86_64         ;
+; Analysis & Synthesis      ; LAPTOP-6JFQAJ9P  ; Windows 8 ; 6.2        ; x86_64         ;
+; Fitter                    ; LAPTOP-6JFQAJ9P  ; Windows 8 ; 6.2        ; x86_64         ;
+; Assembler                 ; LAPTOP-6JFQAJ9P  ; Windows 8 ; 6.2        ; x86_64         ;
+; TimeQuest Timing Analyzer ; LAPTOP-6JFQAJ9P  ; Windows 8 ; 6.2        ; x86_64         ;
+; EDA Netlist Writer        ; LAPTOP-6JFQAJ9P  ; Windows 8 ; 6.2        ; x86_64         ;
 +---------------------------+------------------+-----------+------------+----------------+
 
 
