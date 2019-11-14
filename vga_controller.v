@@ -1,4 +1,3 @@
-`define MOVE_STEP 10
 module vga_controller(  iRST_n,
                         iVGA_CLK,
                         key_in,
@@ -89,16 +88,12 @@ module vga_controller(  iRST_n,
 
 // key binding
     always @(posedge VGA_CLK_n) begin
-<<<<<<< HEAD
-        if (counter == 5000000) begin
-=======
         if (/*counter == 5000000&&*/ key_en ) begin
->>>>>>> 870c8effbf52410f55be7e1a92a9aab825c1d1d4
             case(key_in)
-                8'h75 : y = y - MOVE_STEP;
-                8'h72 : y = y + MOVE_STEP;
-                8'h6b : x = x - MOVE_STEP;
-                8'h74 : x = x + MOVE_STEP;
+                8'h75 : y = y - 10;
+                8'h72 : y = y + 10;
+                8'h6b : x = x - 10;
+                8'h74 : x = x + 10;
             endcase
         end 
     end
