@@ -5,3 +5,11 @@
 !*.hex
 !*.mif
 !*.pdf
+!*.qpf
+!*.qip
+!*.qdf
+!pll.bsf
+!*.cmp
+!*.json
+!*.qsf
+!*.rpt
