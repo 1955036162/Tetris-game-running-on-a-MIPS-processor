@@ -1,4 +1,5 @@
-module PS2_Interface(inclock, resetn, ps2_clock, ps2_data, ps2_key_data, ps2_key_pressed, last_data_received);
+module PS2_Interface(inclock, resetn, ps2_clock, ps2_data, 
+	ps2_key_data, ps2_key_pressed, last_data_received);
 
 	input 			inclock, resetn;
 	inout 			ps2_clock, ps2_data;

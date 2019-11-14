@@ -1,0 +1,10 @@
+module mux_8bit(in1, in2, en, out);
+
+	input  [7:0] in1, in2;
+	input  en;
+
+	output [7:0] out;
+
+	assign out = en ? in2 : in1;
+
+endmodule

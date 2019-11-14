@@ -1,9 +1,11 @@
 module vga_controller(iRST_n,
                       iVGA_CLK,
-							 key_up,
-							 key_down,
-							 key_left,
-							 key_right,
+                      key_in,
+                      key_en,
+                             // key_up,
+                             // key_down,
+                             // key_left,
+                             // key_right,
                       oBLANK_n,
                       oHS,
                       oVS,
@@ -11,9 +13,11 @@ module vga_controller(iRST_n,
                       g_data,
                       r_data);
 
+input [7:0] key_in;
+input key_en;
 input iRST_n;
 input iVGA_CLK;
-input key_up, key_down, key_left, key_right;
+// input key_up, key_down, key_left, key_right;
 output reg oBLANK_n;
 output reg oHS;
 output reg oVS;
@@ -25,8 +29,8 @@ output [7:0] r_data;
 reg [18:0] ADDR;
 reg [23:0] bgr_data;
 reg [9:0]  x, y;
-wire en;
 reg [23:0]counter;
+wire en;
 wire [9:0] addr_x, addr_y;
 wire VGA_CLK_n;
 wire [7:0] index;
@@ -48,8 +52,8 @@ video_sync_generator LTM_ins (.vga_clk(iVGA_CLK),
                               .HS(cHS),
                               .VS(cVS));
 ////
-////Addresss generator
 
+////Addresss generator
 always@(posedge iVGA_CLK, negedge iRST_n)
 begin
   if (!iRST_n)
@@ -64,13 +68,14 @@ assign en = (addr_x >= x && addr_x <= x + 64 && addr_y >= y && addr_y <= y + 48)
 
 always@(posedge iVGA_CLK)
 begin
-	if (counter == 5000000)
-		counter <= 0;
-	else
-		counter = counter + 1;
+    if (counter == 5000000)
+        counter <= 0;
+    else
+        counter = counter + 1;
 end
 
 // key binding
+/*
 always@(posedge VGA_CLK_n)
 begin
   if (!key_up && counter == 5000000)
@@ -82,15 +87,28 @@ begin
   if (!key_right && counter == 5000000)
     x = x + 10;
 end
+*/
+
+// key binding
+always @(posedge VGA_CLK_n) begin
+    if (counter == 5000000 && key_en) begin
+        case(key_in)
+            8'h75 : y = y-10;
+            8'h72 : y = y+10;
+            8'h6b : x = x-10;
+            8'h74 : x = x+10;
+        endcase
+    end 
+end
 
 //////////////////////////
 //////INDEX addr.
 assign VGA_CLK_n = ~iVGA_CLK;
-img_data	img_data_inst (
-	.address ( ADDR ),
-	.clock ( VGA_CLK_n ),
-	.q ( index )
-	);
+img_data    img_data_inst (
+    .address ( ADDR ),
+    .clock ( VGA_CLK_n ),
+    .q ( index )
+    );
 
 /////////////////////////
 //////Add switch-input logic here
@@ -99,11 +117,11 @@ decoder decode(ADDR, addr_x, addr_y); // ADDR => x, y coordinate
 mux_24bit mux1(bgr_data_raw, 24'hFFFF00, en, out); // switch index
 
 //////Color table output
-img_index	img_index_inst (
-	.address ( index ),
-	.clock ( iVGA_CLK ),
-	.q ( bgr_data_raw )
-	);	
+img_index   img_index_inst (
+    .address ( index ),
+    .clock ( iVGA_CLK ),
+    .q ( bgr_data_raw )
+    );  
 //////
 //////latch valid data at falling edge;
 always@(posedge VGA_CLK_n) bgr_data <= out;
