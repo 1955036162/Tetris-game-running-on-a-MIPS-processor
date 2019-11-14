@@ -88,7 +88,7 @@ module vga_controller(  iRST_n,
 
 // key binding
     always @(posedge VGA_CLK_n) begin
-        if (counter == 5000000 && key_en) begin
+        if (counter == 5000000) begin
             case(key_in)
                 8'h75 : y = y-10;
                 8'h72 : y = y+10;
