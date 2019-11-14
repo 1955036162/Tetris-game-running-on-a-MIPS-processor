@@ -73,7 +73,7 @@ module vga_controller(  iRST_n,
     end
 
 // key binding
-
+/*
     always@(posedge VGA_CLK_n) begin
         if (!key_up && counter == 5000000)
             y = y - 10;
@@ -84,28 +84,28 @@ module vga_controller(  iRST_n,
         if (!key_right && counter == 5000000)
             x = x + 10;
     end
-
+*/
 
 // key binding
-always @(posedge VGA_CLK_n) begin
-    if (counter == 5000000 && key_en) begin
-        case(key_in)
-            8'h75 : y = y-10;
-            8'h72 : y = y+10;
-            8'h6b : x = x-10;
-            8'h74 : x = x+10;
-        endcase
-    end 
-end
+    always @(posedge VGA_CLK_n) begin
+        if (counter == 5000000 && key_en) begin
+            case(key_in)
+                8'h75 : y = y-10;
+                8'h72 : y = y+10;
+                8'h6b : x = x-10;
+                8'h74 : x = x+10;
+            endcase
+        end 
+    end
 
 //////////////////////////
 //////INDEX addr.
-assign VGA_CLK_n = ~iVGA_CLK;
-img_data    img_data_inst (
-    .address ( ADDR ),
-    .clock ( VGA_CLK_n ),
-    .q ( index )
-    );
+    assign VGA_CLK_n = ~iVGA_CLK;
+    img_data    img_data_inst (
+        .address ( ADDR ),
+        .clock ( VGA_CLK_n ),
+        .q ( index )
+        );
 
 /////////////////////////
 //////Add switch-input logic here
