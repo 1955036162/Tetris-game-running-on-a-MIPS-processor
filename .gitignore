@@ -1,11 +1,9 @@
 *
 !.gitignore
 !*.v
-!*.tex
 !*.hex
 !*.mif
 !*.pdf
-!*.qpf
 !*.qip
 !pll.bsf
 !*.cmp
