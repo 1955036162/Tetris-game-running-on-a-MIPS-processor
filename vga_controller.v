@@ -41,7 +41,7 @@ module vga_controller(  iRST_n,
     // initialize x y register
     initial begin
         x = 320;
-        y = 240;
+        y = 0;
     end
 
 ////
@@ -63,14 +63,14 @@ module vga_controller(  iRST_n,
             ADDR<=ADDR+1;
     end
 
-    assign en = (addr_x >= x && addr_x <= x + 64 && addr_y >= y && addr_y <= y + 48) ? 1 : 0;
+    assign en = (addr_x >= x && addr_x <= x + 60 && addr_y >= y && addr_y <= y + 40) ? 1 : 0;
 
-    always@(posedge iVGA_CLK) begin
-        if (counter == 5000000)
-            counter <= 0;
-        else
-            counter = counter + 1;
-    end
+    // always@(posedge iVGA_CLK) begin
+    //     if (counter == 5000000)
+    //         counter <= 0;
+    //     else
+    //         counter = counter + 1;
+    // end
 
 // key binding
 /*
@@ -90,10 +90,10 @@ module vga_controller(  iRST_n,
     always @(posedge VGA_CLK_n) begin
         if (/*counter == 5000000&&*/ key_en ) begin
             case(key_in)
-                8'h75 : y = y - 10;
-                8'h72 : y = y + 10;
-                8'h6b : x = x - 10;
-                8'h74 : x = x + 10;
+                8'h75 : y = (y == 0) ? 0 : y - 10;
+                8'h72 : y = (y + 40 == 480) ? 440 : y + 10;
+                8'h6b : x = (x == 0) ? 0 : x - 10;
+                8'h74 : x = (x + 60 == 640) ? 580 : x + 10;
             endcase
         end 
     end
