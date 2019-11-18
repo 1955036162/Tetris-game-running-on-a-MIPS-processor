@@ -93,7 +93,7 @@ module skeleton(resetn,
 
     // VGA
     Reset_Delay         r0  (.iCLK(CLOCK_50),.oRESET(DLY_RST)   );
-    VGA_Audio_PLL       p1  (.areset(~DLY_RST),.inclk0(CLOCK_50),.c0(VGA_CTRL_CLK),.c1(AUD_CTRL_CLK),.c2(VGA_CLK)   );
+    VGA_Audio_PLL       p1  (.areset(~DLY_RST),.inclk0(CLOCK_50),.c0(VGA_CTRL_CLK),.c1(AUD_CTRL_CLK),.c2(VGA_CLK));
     vga_controller vga_ins  (.iRST_n(DLY_RST),
                                  .iVGA_CLK(VGA_CLK),
                                  .key_in(ps2_out),
