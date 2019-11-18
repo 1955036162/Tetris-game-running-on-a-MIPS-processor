@@ -38,11 +38,13 @@ module vga_controller(  iRST_n,
     wire cBLANK_n, cHS, cVS, rst;
     wire [23:0] out;
     wire [23:0] bg_edge;
+    reg stop;
 
     // initialize x y register
     initial begin
         ref_x = 320;
         ref_y = 0;
+        stop = 0;
     end
 
 ////
@@ -64,8 +66,15 @@ module vga_controller(  iRST_n,
             ADDR<=ADDR+1;
     end
 
-    // assign en = (addr_x >= ref_x && addr_x < ref_x + 16 && addr_y >= ref_y && addr_y < ref_y + 16) ? 1 : 0;
-    block block(addr_x, addr_y, ref_x, ref_y, en_block[0], en_block[1]);
+    /*************************************
+     * Pattern tests
+     *************************************/
+    // block block(addr_x, addr_y, ref_x, ref_y, en_block[0], en_block[1]);
+    // square sq(addr_x, addr_y, ref_x, ref_y, en_block[0], en_block[1]);
+    // longBar lb(addr_x, addr_y, ref_x, ref_y, en_block[0], en_block[1]);
+    // TBar tb(addr_x, addr_y, ref_x, ref_y, en_block[0], en_block[1]);
+    // ZBlock zb(addr_x, addr_y, ref_x, ref_y, en_block[0], en_block[1]);
+    SBlock sb(addr_x, addr_y, ref_x, ref_y, en_block[0], en_block[1]);
 
     // counter
     always@(posedge iVGA_CLK) begin
@@ -75,10 +84,23 @@ module vga_controller(  iRST_n,
             counter = counter + 1;
     end
 
+    // always@(posedge VGA_CLK_n) begin
+    //     if(counter == 10000000) begin
+    //         ref_y <= (ref_y + 16 == 480) ? 464 : ref_y + 16; // down
+    //     end   
+    // end
+
     always@(posedge VGA_CLK_n) begin
-        if(counter == 10000000)
+        if(counter == 10000000 && !stop) begin
             ref_y = (ref_y + 16 == 480) ? 464 : ref_y + 16; // down
+            stop = (ref_y + 16 == 480) ? 1 : 0;
+        end
+        else if(stop) begin
+            ref_y = 0;
+            stop = 0;
+        end
     end
+
 
 // key binding
     always@(posedge VGA_CLK_n) begin
@@ -106,11 +128,11 @@ module vga_controller(  iRST_n,
     decoder decode(ADDR, addr_x, addr_y); // ADDR => x, y coordinate
 
     // first edge, then block
-    mux_24bit mux_block_edge (bgr_data_raw, 24'hFFFF00, en_block[1], bg_edge);
-    mux_24bit mux_block_inner(bg_edge,      24'hFF0000, en_block[0], out);
+    mux_24bit mux_block_edge (bgr_data_raw, 24'h000000, en_block[1], bg_edge);
+    mux_24bit mux_block_inner(bg_edge,      24'h00004F, en_block[0], out);
 
 //////Color table output
-    img_index   img_index_inst (
+    img_index img_index_inst (
         .address ( index ),
         .clock ( iVGA_CLK ),
         .q ( bgr_data_raw )
