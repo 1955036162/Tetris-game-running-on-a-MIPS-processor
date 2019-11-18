@@ -5,6 +5,6 @@ module decoder(addr, x, y);
 	output [9:0] x, y;
 
 	assign x = (addr-1) % 640;
-	assign y = addr / 640;
+	assign y = (addr-1) / 640;
 
 endmodule

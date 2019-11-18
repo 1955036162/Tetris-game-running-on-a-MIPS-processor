@@ -28,20 +28,21 @@ module vga_controller(  iRST_n,
 /////////////
     reg [18:0] ADDR;
     reg [23:0] bgr_data;
-    reg [9:0]  x, y;
-    reg [23:0]counter;
-    wire en;
+    reg [9:0]  ref_x, ref_y;
+    reg [23:0] counter;
+    wire [1:0] en_block; // en[0] for inner, en[1] for edge
     wire [9:0] addr_x, addr_y;
     wire VGA_CLK_n;
     wire [7:0] index;
     wire [23:0] bgr_data_raw;
     wire cBLANK_n, cHS, cVS, rst;
     wire [23:0] out;
+    wire [23:0] bg_edge;
 
     // initialize x y register
     initial begin
-        x = 320;
-        y = 0;
+        ref_x = 320;
+        ref_y = 0;
     end
 
 ////
@@ -63,37 +64,30 @@ module vga_controller(  iRST_n,
             ADDR<=ADDR+1;
     end
 
-    assign en = (addr_x >= x && addr_x <= x + 60 && addr_y >= y && addr_y <= y + 40) ? 1 : 0;
+    // assign en = (addr_x >= ref_x && addr_x < ref_x + 16 && addr_y >= ref_y && addr_y < ref_y + 16) ? 1 : 0;
+    block block(addr_x, addr_y, ref_x, ref_y, en_block[0], en_block[1]);
 
-    // always@(posedge iVGA_CLK) begin
-    //     if (counter == 5000000)
-    //         counter <= 0;
-    //     else
-    //         counter = counter + 1;
-    // end
-
-// key binding
-/*
-    always@(posedge VGA_CLK_n) begin
-        if (!key_up && counter == 5000000)
-            y = y - 10;
-        if (!key_down && counter == 5000000)
-            y = y + 10;
-        if (!key_left && counter == 5000000)
-            x = x - 10;
-        if (!key_right && counter == 5000000)
-            x = x + 10;
+    // counter
+    always@(posedge iVGA_CLK) begin
+        if (counter == 10000000)
+            counter <= 0;
+        else
+            counter = counter + 1;
     end
-*/
+
+    always@(posedge VGA_CLK_n) begin
+        if(counter == 10000000)
+            ref_y = (ref_y + 16 == 480) ? 464 : ref_y + 16; // down
+    end
 
 // key binding
-    always @(posedge VGA_CLK_n) begin
-        if (/*counter == 5000000&&*/ key_en ) begin
+    always@(posedge VGA_CLK_n) begin
+        if ( key_en ) begin
             case(key_in)
-                8'h75 : y = (y == 0) ? 0 : y - 10;
-                8'h72 : y = (y + 40 == 480) ? 440 : y + 10;
-                8'h6b : x = (x == 0) ? 0 : x - 10;
-                8'h74 : x = (x + 60 == 640) ? 580 : x + 10;
+                // 8'h75 : ref_y = (ref_y == 0) ? 0 : ref_y - 10;
+                // 8'h72 : ref_y = (ref_y + 16 == 480) ? 464 : ref_y + 16;
+                8'h6b : ref_x = (ref_x == 0) ? 0 : ref_x - 16;
+                8'h74 : ref_x = (ref_x + 16 == 640) ? 624 : ref_x + 16;
             endcase
         end 
     end
@@ -111,14 +105,16 @@ module vga_controller(  iRST_n,
 //////Add switch-input logic here
     decoder decode(ADDR, addr_x, addr_y); // ADDR => x, y coordinate
 
-    mux_24bit mux1(bgr_data_raw, 24'hFFFF00, en, out); // switch index
+    // first edge, then block
+    mux_24bit mux_block_edge (bgr_data_raw, 24'hFFFF00, en_block[1], bg_edge);
+    mux_24bit mux_block_inner(bg_edge,      24'hFF0000, en_block[0], out);
 
 //////Color table output
     img_index   img_index_inst (
         .address ( index ),
         .clock ( iVGA_CLK ),
         .q ( bgr_data_raw )
-        );  
+        );
 //////
 
 //////latch valid data at falling edge;
