@@ -25,11 +25,7 @@ module vga_controller(  iRST_n,
     output [7:0] g_data;  
     output [7:0] r_data;
 
-/////////////
-    reg [18:0] ADDR;
-    reg [23:0] bgr_data;
-    reg [9:0]  ref_x, ref_y;
-    reg [23:0] counter;
+///////////// wires
     wire [1:0] en_block; // en[0] for inner, en[1] for edge
     wire [9:0] addr_x, addr_y;
     wire VGA_CLK_n;
@@ -38,13 +34,27 @@ module vga_controller(  iRST_n,
     wire cBLANK_n, cHS, cVS, rst;
     wire [23:0] out;
     wire [23:0] bg_edge;
+
+///////////// Registers
+    reg [18:0] ADDR;
+    reg [23:0] bgr_data;
+    reg [9:0]  ref_x, ref_y;
+    reg [23:0] counter;
     reg stop;
+    reg [2:0] offsetLeft, offsetRight;
+    reg [2:0] height;
+    reg [2:0] blockType;
+
+    parameter size = 16;
 
     // initialize x y register
     initial begin
         ref_x = 320;
         ref_y = 0;
         stop = 0;
+        offsetLeft = 0;
+        offsetRight = 0;
+        height = 0;
     end
 
 ////
@@ -74,7 +84,8 @@ module vga_controller(  iRST_n,
     // longBar lb(addr_x, addr_y, ref_x, ref_y, en_block[0], en_block[1]);
     // TBar tb(addr_x, addr_y, ref_x, ref_y, en_block[0], en_block[1]);
     // ZBlock zb(addr_x, addr_y, ref_x, ref_y, en_block[0], en_block[1]);
-    SBlock sb(addr_x, addr_y, ref_x, ref_y, en_block[0], en_block[1]);
+    SBlock sb(addr_x, addr_y, ref_x, ref_y, en_block[0], en_block[1], 
+                offsetLeft, offsetRight, height);
 
     // counter
     always@(posedge iVGA_CLK) begin
@@ -90,10 +101,13 @@ module vga_controller(  iRST_n,
     //     end   
     // end
 
+    // falling pieces
     always@(posedge VGA_CLK_n) begin
         if(counter == 10000000 && !stop) begin
-            ref_y = (ref_y + 16 == 480) ? 464 : ref_y + 16; // down
-            stop = (ref_y + 16 == 480) ? 1 : 0;
+            // ref_y <= (ref_y + height * size == 480) ? 480 - height * size : 
+                    // ref_y + 16;
+            ref_y <= ref_y + 16;
+            stop  <= (ref_y + height * size == 480) ? 1 : 0;
         end
         else if(stop) begin
             ref_y = 0;
@@ -101,17 +115,18 @@ module vga_controller(  iRST_n,
         end
     end
 
-
 // key binding
     always@(posedge VGA_CLK_n) begin
         if ( key_en ) begin
             case(key_in)
                 // 8'h75 : ref_y = (ref_y == 0) ? 0 : ref_y - 10;
-                // 8'h72 : ref_y = (ref_y + 16 == 480) ? 464 : ref_y + 16;
-                8'h6b : ref_x = (ref_x == 0) ? 0 : ref_x - 16;
-                8'h74 : ref_x = (ref_x + 16 == 640) ? 624 : ref_x + 16;
+                // 8'h72 : ref_y = ref_y + 16;
+                8'h6b : ref_x = (ref_x - offsetLeft  * size == 240) ? 
+                        240 + offsetLeft  * size : ref_x - 16;
+                8'h74 : ref_x = (ref_x + offsetRight * size == 400) ? 
+                        400 - offsetRight * size : ref_x + 16;
             endcase
-        end 
+        end
     end
 
 //////////////////////////
