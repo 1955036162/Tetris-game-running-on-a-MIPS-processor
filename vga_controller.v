@@ -26,7 +26,7 @@ module vga_controller(  iRST_n,
     output [7:0] r_data;
 
 ///////////// wires
-    wire [1:0] en_block; // en[0] for inner, en[1] for edge
+    wire [1:0] en_0, en_1, en_2, en_3, en_4;
     wire [9:0] addr_x, addr_y;
     wire VGA_CLK_n;
     wire [7:0] index;
@@ -34,6 +34,7 @@ module vga_controller(  iRST_n,
     wire cBLANK_n, cHS, cVS, rst;
     wire [23:0] out;
     wire [23:0] bg_edge;
+    wire [12:0] randomNum;
 
 ///////////// Registers
     reg [18:0] ADDR;
@@ -43,6 +44,7 @@ module vga_controller(  iRST_n,
     reg stop;
     reg [2:0] offsetLeft, offsetRight;
     reg [2:0] height;
+    reg [1:0] en_block; // en[0] for inner, en[1] for edge
     reg [2:0] blockType;
 
     parameter size = 16;
@@ -55,6 +57,7 @@ module vga_controller(  iRST_n,
         offsetLeft = 0;
         offsetRight = 0;
         height = 0;
+        blockType = 0;
     end
 
 ////
@@ -69,23 +72,41 @@ module vga_controller(  iRST_n,
 ////Addresss generator
     always@(posedge iVGA_CLK, negedge iRST_n) begin
         if (!iRST_n)
-             ADDR<=19'd0;
+            ADDR<=19'd0;
         else if (cHS==1'b0 && cVS==1'b0)
             ADDR<=19'd0;
         else if (cBLANK_n==1'b1)
             ADDR<=ADDR+1;
     end
 
+    LFSR pseudoRandomGenerator(randomNum, 1'b1, iVGA_CLK);
+    always@(*) begin
+        if (stop)
+            blockType <= randomNum;
+    end
+
     /*************************************
      * Pattern tests
      *************************************/
+    square sq(addr_x, addr_y, ref_x, ref_y, en_0[0], en_0[1]);
+    longBar lb(addr_x, addr_y, ref_x, ref_y, en_1[0], en_1[1]);
+    TBar tb(addr_x, addr_y, ref_x, ref_y, en_2[0], en_2[1]);
+    ZBlock zb(addr_x, addr_y, ref_x, ref_y, en_3[0], en_3[1]);
+    SBlock sb(addr_x, addr_y, ref_x, ref_y, en_4[0], en_4[1]);
+
     // block block(addr_x, addr_y, ref_x, ref_y, en_block[0], en_block[1]);
-    // square sq(addr_x, addr_y, ref_x, ref_y, en_block[0], en_block[1]);
-    // longBar lb(addr_x, addr_y, ref_x, ref_y, en_block[0], en_block[1]);
-    // TBar tb(addr_x, addr_y, ref_x, ref_y, en_block[0], en_block[1]);
-    // ZBlock zb(addr_x, addr_y, ref_x, ref_y, en_block[0], en_block[1]);
-    SBlock sb(addr_x, addr_y, ref_x, ref_y, en_block[0], en_block[1], 
-                offsetLeft, offsetRight, height);
+    always@(*)begin
+        case(blockType)
+            0 : en_block <= en_0;
+            1 : en_block <= en_1;
+            2 : en_block <= en_2;
+            3 : en_block <= en_3;
+            4 : en_block <= en_4;
+        endcase
+    end
+
+    // SBlock sb(addr_x, addr_y, ref_x, ref_y, en_block[0], en_block[1], 
+    //             offsetLeft, offsetRight, height);
 
     // counter
     always@(posedge iVGA_CLK) begin
