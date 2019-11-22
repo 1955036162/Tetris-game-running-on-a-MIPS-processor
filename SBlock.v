@@ -1,7 +1,7 @@
 module SBlock(
     input [9:0] addr_x, addr_y,
     input [9:0] ref_x, ref_y,
-    output en_inner, en_edge,
+    output en_inner, en_edge
     // output [2:0] offsetLeft, offsetRight,
     // output [2:0] height
     );

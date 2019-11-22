@@ -9,7 +9,7 @@ module LFSR(
     wire linear_feedback;
 
     initial begin
-        register = 12'hCAB;
+        register = {1'b1, 12'hCAB};
     end
 
     //-------------Code Starts Here-------

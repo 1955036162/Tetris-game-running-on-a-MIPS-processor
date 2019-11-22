@@ -35,6 +35,7 @@ module vga_controller(  iRST_n,
     wire [23:0] out;
     wire [23:0] bg_edge;
     wire [12:0] randomNum;
+    wire [11:0] blockNeighbors;
 
 ///////////// Registers
     reg [18:0] ADDR;
@@ -42,8 +43,10 @@ module vga_controller(  iRST_n,
     reg [9:0]  ref_x, ref_y;
     reg [23:0] counter;
     reg stop;
+    // no need in the future
     reg [2:0] offsetLeft, offsetRight;
     reg [2:0] height;
+    /////////////////
     reg [1:0] en_block; // en[0] for inner, en[1] for edge
     reg [2:0] blockType;
 
@@ -82,29 +85,33 @@ module vga_controller(  iRST_n,
     LFSR pseudoRandomGenerator(randomNum, 1'b1, iVGA_CLK);
     always@(*) begin
         if (stop)
-            blockType <= randomNum;
+            blockType <= randomNum % 5;
     end
-    
+
     /*************************************
      * Pattern tests
      *************************************/
-    shape sp(addr_x, addr_y, ref_x,, ref_y, );
+    shape sp(addr_x, addr_y, ref_x, ref_y, blockNeighbors, 
+            en_block[0], en_block[1]);
+    // grid background(addr_x, addr_y, static, en1, en2); // static[29:0][9:0]
     // square sq(addr_x, addr_y, ref_x, ref_y, en_0[0], en_0[1]);
     // longBar lb(addr_x, addr_y, ref_x, ref_y, en_1[0], en_1[1]);
     // TBar tb(addr_x, addr_y, ref_x, ref_y, en_2[0], en_2[1]);
     // ZBlock zb(addr_x, addr_y, ref_x, ref_y, en_3[0], en_3[1]);
     // SBlock sb(addr_x, addr_y, ref_x, ref_y, en_4[0], en_4[1]);
 
+    assign blockNeighbors = 12'hFFF;
+
     // block block(addr_x, addr_y, ref_x, ref_y, en_block[0], en_block[1]);
-    always@(*)begin
-        case(blockType)
-            0 : en_block <= en_0;
-            1 : en_block <= en_1;
-            2 : en_block <= en_2;
-            3 : en_block <= en_3;
-            4 : en_block <= en_4;
-        endcase
-    end
+    // always@(*)begin
+    //     case(blockType)
+    //         0 : en_block <= en_0;
+    //         1 : en_block <= en_1;
+    //         2 : en_block <= en_2;
+    //         3 : en_block <= en_3;
+    //         4 : en_block <= en_4;
+    //     endcase
+    // end
 
     // SBlock sb(addr_x, addr_y, ref_x, ref_y, en_block[0], en_block[1], 
     //             offsetLeft, offsetRight, height);
@@ -129,6 +136,7 @@ module vga_controller(  iRST_n,
             // ref_y <= (ref_y + height * size == 480) ? 480 - height * size : 
                     // ref_y + 16;
             ref_y <= ref_y + 16;
+            // ref_x, ref_y => 4 coordinates => bottom line
             stop  <= (ref_y + height * size == 480) ? 1 : 0;
         end
         else if(stop) begin
@@ -143,7 +151,7 @@ module vga_controller(  iRST_n,
             case(key_in)
                 // 8'h75 : ref_y = (ref_y == 0) ? 0 : ref_y - 10;
                 // 8'h72 : ref_y = ref_y + 16;
-                8'h6b : ref_x = able to move left ? 
+                8'h6b : ref_x = (ref_x == 240) ? 
                         240 + offsetLeft  * size : ref_x - 16;
                 8'h74 : ref_x = (ref_x + offsetRight * size == 400) ? 
                         400 - offsetRight * size : ref_x + 16;
