@@ -84,15 +84,16 @@ module vga_controller(  iRST_n,
         if (stop)
             blockType <= randomNum;
     end
-
+    
     /*************************************
      * Pattern tests
      *************************************/
-    square sq(addr_x, addr_y, ref_x, ref_y, en_0[0], en_0[1]);
-    longBar lb(addr_x, addr_y, ref_x, ref_y, en_1[0], en_1[1]);
-    TBar tb(addr_x, addr_y, ref_x, ref_y, en_2[0], en_2[1]);
-    ZBlock zb(addr_x, addr_y, ref_x, ref_y, en_3[0], en_3[1]);
-    SBlock sb(addr_x, addr_y, ref_x, ref_y, en_4[0], en_4[1]);
+    shape sp(addr_x, addr_y, ref_x,, ref_y, );
+    // square sq(addr_x, addr_y, ref_x, ref_y, en_0[0], en_0[1]);
+    // longBar lb(addr_x, addr_y, ref_x, ref_y, en_1[0], en_1[1]);
+    // TBar tb(addr_x, addr_y, ref_x, ref_y, en_2[0], en_2[1]);
+    // ZBlock zb(addr_x, addr_y, ref_x, ref_y, en_3[0], en_3[1]);
+    // SBlock sb(addr_x, addr_y, ref_x, ref_y, en_4[0], en_4[1]);
 
     // block block(addr_x, addr_y, ref_x, ref_y, en_block[0], en_block[1]);
     always@(*)begin
@@ -142,7 +143,7 @@ module vga_controller(  iRST_n,
             case(key_in)
                 // 8'h75 : ref_y = (ref_y == 0) ? 0 : ref_y - 10;
                 // 8'h72 : ref_y = ref_y + 16;
-                8'h6b : ref_x = (ref_x - offsetLeft  * size == 240) ? 
+                8'h6b : ref_x = able to move left ? 
                         240 + offsetLeft  * size : ref_x - 16;
                 8'h74 : ref_x = (ref_x + offsetRight * size == 400) ? 
                         400 - offsetRight * size : ref_x + 16;
