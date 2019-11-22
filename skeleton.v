@@ -3,19 +3,15 @@ module skeleton(resetn,
     debug_data_in, debug_addr, leds,                        // extra debugging ports
     lcd_data, lcd_rw, lcd_en, lcd_rs, lcd_on, lcd_blon,     // LCD info
     seg1, seg2, seg3, seg4, seg5, seg6, seg7, seg8,         // seven segements
-    VGA_CLK,                                                        //  VGA Clock
-    VGA_HS,                                                         //  VGA H_SYNC
-    VGA_VS,                                                         //  VGA V_SYNC
-    VGA_BLANK,                                                      //  VGA BLANK
-    VGA_SYNC,                                                       //  VGA SYNC
-    VGA_R,                                                          //  VGA Red[9:0]
-    VGA_G,                                                          //  VGA Green[9:0]
-    VGA_B,                                                          //  VGA Blue[9:0]
-    CLOCK_50                                                        //  50 MHz clock
-    // key_up,
-    // key_down,
-    // key_left,
-    // key_right
+    VGA_CLK,                                                //  VGA Clock
+    VGA_HS,                                                 //  VGA H_SYNC
+    VGA_VS,                                                 //  VGA V_SYNC
+    VGA_BLANK,                                              //  VGA BLANK
+    VGA_SYNC,                                               //  VGA SYNC
+    VGA_R,                                                  //  VGA Red[9:0]
+    VGA_G,                                                  //  VGA Green[9:0]
+    VGA_B,                                                  //  VGA Blue[9:0]
+    CLOCK_50                                                //  50 MHz clock
     );
 
     ////////////////////////    VGA ////////////////////////////
@@ -28,19 +24,17 @@ module skeleton(resetn,
     output  [7:0]   VGA_G;                  //  VGA Green[9:0]
     output  [7:0]   VGA_B;                  //  VGA Blue[9:0]
     input           CLOCK_50;
-    // input           key_up, key_down, key_left, key_right;
 
     ////////////////////////    PS2 ////////////////////////////
     input           resetn;
     inout           ps2_data, ps2_clock;
     
     ////////////////////////    LCD and Seven Segment   ////////////////////////////
-    output             lcd_rw, lcd_en, lcd_rs, lcd_on, lcd_blon;
-    output  [7:0]   leds, lcd_data;
-    output  [6:0]   seg1, seg2, seg3, seg4, seg5, seg6, seg7, seg8;
-    output  [31:0]  debug_data_in;
+    output           lcd_rw, lcd_en, lcd_rs, lcd_on, lcd_blon;
+    output  [7:0]    leds, lcd_data;
+    output  [6:0]    seg1, seg2, seg3, seg4, seg5, seg6, seg7, seg8;
+    output  [31:0]   debug_data_in;
     output  [11:0]   debug_addr;
-
 
     wire             clock;
     wire             lcd_write_en;

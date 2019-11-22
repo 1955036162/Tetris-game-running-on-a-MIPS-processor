@@ -1,9 +1,9 @@
 module SBlock(
     input [9:0] addr_x, addr_y,
     input [9:0] ref_x, ref_y,
-    output en_inner, en_edge,
-    output [2:0] offsetLeft, offsetRight,
-    output [2:0] height
+    output en_inner, en_edge
+    // output [2:0] offsetLeft, offsetRight,
+    // output [2:0] height
     );
 
     parameter size = 16;
@@ -18,8 +18,8 @@ module SBlock(
 
     assign en_inner = en_i[0] || en_i[1] || en_i[2] || en_i[3];
     assign en_edge  = en_e[0] || en_e[1] || en_e[2] || en_e[3];
-    assign offsetLeft = 1;
-    assign offsetRight = 2;
-    assign height = 2;
+    // assign offsetLeft = 1;
+    // assign offsetRight = 2;
+    // assign height = 2;
 
 endmodule
