@@ -26,7 +26,7 @@ module vga_controller(  iRST_n,
     output [7:0] r_data;
 
 ///////////// wires
-    wire [1:0] en_0, en_1, en_2, en_3, en_4;
+    // wire [1:0] en_0, en_1, en_2, en_3, en_4;
     wire [9:0] addr_x, addr_y;
     wire VGA_CLK_n;
     wire [7:0] index;
@@ -35,7 +35,6 @@ module vga_controller(  iRST_n,
     wire [23:0] out;
     wire [23:0] bg_edge;
     wire [12:0] randomNum;
-    wire [11:0] blockNeighbors;
 
 ///////////// Registers
     reg [18:0] ADDR;
@@ -47,8 +46,10 @@ module vga_controller(  iRST_n,
     reg [2:0] offsetLeft, offsetRight;
     reg [2:0] height;
     /////////////////
-    reg [1:0] en_block; // en[0] for inner, en[1] for edge
-    reg [2:0] blockType;
+    reg [1:0]  en_block; // en[0] for inner, en[1] for edge
+    reg [2:0]  blockType;
+    reg [11:0] blockNeighbors;
+    reg [9:0]  grid [29:0];
 
     parameter size = 16;
 
@@ -100,10 +101,19 @@ module vga_controller(  iRST_n,
     // ZBlock zb(addr_x, addr_y, ref_x, ref_y, en_3[0], en_3[1]);
     // SBlock sb(addr_x, addr_y, ref_x, ref_y, en_4[0], en_4[1]);
 
-    assign blockNeighbors = 12'hFFF;
+    // assign blockNeighbors = 12'hFFF;
+    always@(*) begin
+        case(blockType)
+            0 : blockNeighbors = 12'h0C6;  // square
+            1 : blockNeighbors = 12'h01E;  // long bar
+            2 : blockNeighbors = 12'h0E2;  // Tbar
+            3 : blockNeighbors = 12'h0C3;  // ZBlock
+            4 : blockNeighbors = 12'h066;  // SBlock
+        endcase
+    end
 
     // block block(addr_x, addr_y, ref_x, ref_y, en_block[0], en_block[1]);
-    // always@(*)begin
+    // always@(*) begin
     //     case(blockType)
     //         0 : en_block <= en_0;
     //         1 : en_block <= en_1;
