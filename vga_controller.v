@@ -36,8 +36,9 @@ module vga_controller(  iRST_n,
     wire [23:0] bg_edge;
     wire [12:0] randomNum;
     wire [1:0]  en_block; // en[0] for inner, en[1] for edge
-    // wire stop;
     wire stopSign;
+    wire [4:0] index_i, index_j;
+    // wire stop;
 
 ///////////// Registers
     reg [18:0] ADDR;
@@ -51,7 +52,7 @@ module vga_controller(  iRST_n,
     /////////////////
     reg [2:0]  blockType;
     reg [11:0] blockNeighbors;
-    reg [9:0]  grid [29:0];
+    reg [9:0]  grid [0:29];
     reg stop;
 
     parameter size = 16;
@@ -98,7 +99,10 @@ module vga_controller(  iRST_n,
      *************************************/
     shape sp(addr_x, addr_y, ref_x, ref_y, blockNeighbors, 
             en_block[0], en_block[1]);
-    // grid background(addr_x, addr_y, static, en1, en2); // static[29:0][9:0]
+
+    // back ground of grids, genvar
+    // back_ground bg_grid(addr_x, addr_y, grid, en1, en2);
+
     // square sq(addr_x, addr_y, ref_x, ref_y, en_0[0], en_0[1]);
     // longBar lb(addr_x, addr_y, ref_x, ref_y, en_1[0], en_1[1]);
     // TBar tb(addr_x, addr_y, ref_x, ref_y, en_2[0], en_2[1]);
@@ -146,15 +150,54 @@ module vga_controller(  iRST_n,
     // stop sign
     stop_sign(blockNeighbors, ref_x, ref_y, stopSign);
 
+    // always@(posedge VGA_CLK_n) begin
+    //     if(counter == 10000000) begin
+    //         if(!stop) begin
+    //             ref_y <= ref_y + 16;
+    //         end
+    //     end
+    //     else begin
+    //         ref_y = 0;
+    //     end
+    // end
+
     // falling pieces
     always@(posedge VGA_CLK_n) begin
         if(counter == 10000000 && !stop) begin
-            ref_y <= ref_y + 16;
+            ref_y <= ref_y + size;
             stop <= stopSign;
         end
         else if(stop) begin
             ref_y <= 0;
             stop <= 0;
+        end
+    end
+
+    always@(posedge VGA_CLK_n) begin
+        if(stop) begin
+            grid[index_i][index_j] <= 1'b1;  // ref block, always 1
+            if(blockNeighbors[0])
+                grid[index_i][index_j-1] <= 1'b1;
+            if(blockNeighbors[2])
+                grid[index_i][index_j+1] <= 1'b1;
+            if(blockNeighbors[3])
+                grid[index_i][index_j+2] <= 1'b1;
+            if(blockNeighbors[4])
+                grid[index_i][index_j+3] <= 1'b1;
+            if(blockNeighbors[5])
+                grid[index_i+1][index_j-1] <= 1'b1;
+            if(blockNeighbors[6])
+                grid[index_i+1][index_j]   <= 1'b1;
+            if(blockNeighbors[7])
+                grid[index_i+1][index_j+1] <= 1'b1;
+            if(blockNeighbors[8])
+                grid[index_i+2][index_j-1] <= 1'b1;
+            if(blockNeighbors[9])
+                grid[index_i+2][index_j]   <= 1'b1;
+            if(blockNeighbors[10])
+                grid[index_i+2][index_j+1] <= 1'b1;
+            if(blockNeighbors[11])
+                grid[index_i+3][index_j]   <= 1'b1;
         end
     end
 
@@ -165,9 +208,9 @@ module vga_controller(  iRST_n,
                 // 8'h75 : ref_y = (ref_y == 0) ? 0 : ref_y - 10;
                 // 8'h72 : ref_y = ref_y + 16;
                 8'h6b : ref_x = (ref_x == 240) ? 
-                        240 + offsetLeft  * size : ref_x - 16;
+                        240 + offsetLeft  * size : ref_x - size;
                 8'h74 : ref_x = (ref_x + offsetRight * size == 400) ? 
-                        400 - offsetRight * size : ref_x + 16;
+                        400 - offsetRight * size : ref_x + size;
             endcase
         end
     end
@@ -184,6 +227,7 @@ module vga_controller(  iRST_n,
 /////////////////////////
 //////Add switch-input logic here
     decoder decode(ADDR, addr_x, addr_y); // ADDR => x, y coordinate
+    ref2ind ref2index(ref_x, ref_y, index_i, index_j);
 
     // first edge, then block
     mux_24bit mux_block_edge (bgr_data_raw, 24'h000000, en_block[1], bg_edge);
