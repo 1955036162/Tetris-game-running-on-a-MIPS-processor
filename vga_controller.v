@@ -35,21 +35,24 @@ module vga_controller(  iRST_n,
     wire [23:0] out;
     wire [23:0] bg_edge;
     wire [12:0] randomNum;
+    wire [1:0]  en_block; // en[0] for inner, en[1] for edge
+    // wire stop;
+    wire stopSign;
 
 ///////////// Registers
     reg [18:0] ADDR;
     reg [23:0] bgr_data;
     reg [9:0]  ref_x, ref_y;
     reg [23:0] counter;
-    reg stop;
+
     // no need in the future
     reg [2:0] offsetLeft, offsetRight;
     reg [2:0] height;
     /////////////////
-    reg [1:0]  en_block; // en[0] for inner, en[1] for edge
     reg [2:0]  blockType;
     reg [11:0] blockNeighbors;
     reg [9:0]  grid [29:0];
+    reg stop;
 
     parameter size = 16;
 
@@ -85,8 +88,9 @@ module vga_controller(  iRST_n,
 
     LFSR pseudoRandomGenerator(randomNum, 1'b1, iVGA_CLK);
     always@(*) begin
-        if (stop)
+        if (stop) begin
             blockType <= randomNum % 5;
+        end
     end
 
     /*************************************
@@ -101,7 +105,6 @@ module vga_controller(  iRST_n,
     // ZBlock zb(addr_x, addr_y, ref_x, ref_y, en_3[0], en_3[1]);
     // SBlock sb(addr_x, addr_y, ref_x, ref_y, en_4[0], en_4[1]);
 
-    // assign blockNeighbors = 12'hFFF;
     always@(*) begin
         case(blockType)
             0 : blockNeighbors = 12'h0C6;  // square
@@ -140,18 +143,18 @@ module vga_controller(  iRST_n,
     //     end   
     // end
 
+    // stop sign
+    stop_sign(blockNeighbors, ref_x, ref_y, stopSign);
+
     // falling pieces
     always@(posedge VGA_CLK_n) begin
         if(counter == 10000000 && !stop) begin
-            // ref_y <= (ref_y + height * size == 480) ? 480 - height * size : 
-                    // ref_y + 16;
             ref_y <= ref_y + 16;
-            // ref_x, ref_y => 4 coordinates => bottom line
-            stop  <= (ref_y + height * size == 480) ? 1 : 0;
+            stop <= stopSign;
         end
         else if(stop) begin
-            ref_y = 0;
-            stop = 0;
+            ref_y <= 0;
+            stop <= 0;
         end
     end
 
