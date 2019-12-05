@@ -36,9 +36,9 @@ module vga_controller(  iRST_n,
     wire [23:0] bg_edge;
     wire [12:0] randomNum;
     wire [1:0]  en_block; // en[0] for inner, en[1] for edge
+    wire [1:0]  shape_en, static_block_en;
     wire stopSign;
-    wire [4:0] index_i, index_j;
-    // wire stop;
+    wire [8:0] gridNum;
 
 ///////////// Registers
     reg [18:0] ADDR;
@@ -50,14 +50,14 @@ module vga_controller(  iRST_n,
     reg [2:0] offsetLeft, offsetRight;
     reg [2:0] height;
     /////////////////
-    reg [2:0]  blockType;
-    reg [11:0] blockNeighbors;
-    reg [9:0]  grid [0:29];
+    reg [2:0]   blockType;
+    reg [11:0]  blockNeighbors;
+    reg [299:0] grid;
     reg stop;
 
     parameter size = 16;
 
-    // initialize x y register
+    // initialize registers
     initial begin
         ref_x = 320;
         ref_y = 0;
@@ -66,6 +66,9 @@ module vga_controller(  iRST_n,
         offsetRight = 0;
         height = 0;
         blockType = 0;
+        // grid init
+        grid[295] = 1;
+        grid[0] = 1;
     end
 
 ////
@@ -98,10 +101,14 @@ module vga_controller(  iRST_n,
      * Pattern tests
      *************************************/
     shape sp(addr_x, addr_y, ref_x, ref_y, blockNeighbors, 
-            en_block[0], en_block[1]);
+            shape_en[0], shape_en[1]);
 
-    // back ground of grids, genvar
-    // back_ground bg_grid(addr_x, addr_y, grid, en1, en2);
+    // static blocks, generate by grid
+    static_block stablock(addr_x, addr_y, grid, 
+                    static_block_en[0], static_block_en[1]);
+
+    assign en_block[1] = shape_en[1] | static_block_en[1];
+    assign en_block[0] = shape_en[0] | static_block_en[0];
 
     // square sq(addr_x, addr_y, ref_x, ref_y, en_0[0], en_0[1]);
     // longBar lb(addr_x, addr_y, ref_x, ref_y, en_1[0], en_1[1]);
@@ -148,7 +155,7 @@ module vga_controller(  iRST_n,
     // end
 
     // stop sign
-    stop_sign(blockNeighbors, ref_x, ref_y, stopSign);
+    stop_sign(blockNeighbors, ref_x, ref_y, stopSign); // needs grid as input 
 
     // always@(posedge VGA_CLK_n) begin
     //     if(counter == 10000000) begin
@@ -175,33 +182,45 @@ module vga_controller(  iRST_n,
 
     always@(posedge VGA_CLK_n) begin
         if(stop) begin
-            grid[index_i][index_j] <= 1'b1;  // ref block, always 1
+            grid[gridNum] <= 1'b1;  // ref block, always 1
+
             if(blockNeighbors[0])
-                grid[index_i][index_j-1] <= 1'b1;
+                grid[gridNum - 1] <= 1'b1;
+
             if(blockNeighbors[2])
-                grid[index_i][index_j+1] <= 1'b1;
+                grid[gridNum + 1] <= 1'b1;
+
             if(blockNeighbors[3])
-                grid[index_i][index_j+2] <= 1'b1;
+                grid[gridNum + 2] <= 1'b1;
+
             if(blockNeighbors[4])
-                grid[index_i][index_j+3] <= 1'b1;
+                grid[gridNum + 3] <= 1'b1;
+
             if(blockNeighbors[5])
-                grid[index_i+1][index_j-1] <= 1'b1;
+                grid[gridNum + 9] <= 1'b1;
+
             if(blockNeighbors[6])
-                grid[index_i+1][index_j]   <= 1'b1;
+                grid[gridNum + 10] <= 1'b1;
+
             if(blockNeighbors[7])
-                grid[index_i+1][index_j+1] <= 1'b1;
+                grid[gridNum + 11] <= 1'b1;
+
             if(blockNeighbors[8])
-                grid[index_i+2][index_j-1] <= 1'b1;
+                grid[gridNum + 19] <= 1'b1;
+
             if(blockNeighbors[9])
-                grid[index_i+2][index_j]   <= 1'b1;
+                grid[gridNum + 20]   <= 1'b1;
+
             if(blockNeighbors[10])
-                grid[index_i+2][index_j+1] <= 1'b1;
+                grid[gridNum + 21] <= 1'b1;
+
             if(blockNeighbors[11])
-                grid[index_i+3][index_j]   <= 1'b1;
+                grid[gridNum + 30]   <= 1'b1;
         end
     end
 
-// key binding
+
+    // key binding
     always@(posedge VGA_CLK_n) begin
         if ( key_en ) begin
             case(key_in)
@@ -227,7 +246,7 @@ module vga_controller(  iRST_n,
 /////////////////////////
 //////Add switch-input logic here
     decoder decode(ADDR, addr_x, addr_y); // ADDR => x, y coordinate
-    ref2ind ref2index(ref_x, ref_y, index_i, index_j);
+    coord2ind coordinate2gridNum(ref_x, ref_y, gridNum); // ref x y to index
 
     // first edge, then block
     mux_24bit mux_block_edge (bgr_data_raw, 24'h000000, en_block[1], bg_edge);

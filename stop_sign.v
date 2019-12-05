@@ -1,6 +1,7 @@
 module stop_sign(
     input  [11:0] blockNeighbors,
     input  [9:0] ref_x, ref_y,
+    // input  grid  border testing
     output reg stop
     );
 

@@ -5,3 +5,4 @@ module blockNeighbors2index(
     output [4:0]  neighbor3_i, neighbor3_j
     );
 
+endmodule
