@@ -35,25 +35,29 @@ module vga_controller(  iRST_n,
     wire [23:0] out;
     wire [23:0] bg_edge;
     wire [12:0] randomNum;
+    wire [1:0]  en_block; // en[0] for inner, en[1] for edge
+    wire [1:0]  shape_en, static_block_en;
+    wire stopSign;
+    wire [8:0] gridNum;
 
 ///////////// Registers
     reg [18:0] ADDR;
     reg [23:0] bgr_data;
     reg [9:0]  ref_x, ref_y;
     reg [23:0] counter;
-    reg stop;
+
     // no need in the future
     reg [2:0] offsetLeft, offsetRight;
     reg [2:0] height;
     /////////////////
-    reg [1:0]  en_block; // en[0] for inner, en[1] for edge
-    reg [2:0]  blockType;
-    reg [11:0] blockNeighbors;
-    reg [9:0]  grid [29:0];
+    reg [2:0]   blockType;
+    reg [11:0]  blockNeighbors;
+    reg [299:0] grid;
+    reg stop;
 
     parameter size = 16;
 
-    // initialize x y register
+    // initialize registers
     initial begin
         ref_x = 320;
         ref_y = 0;
@@ -62,6 +66,9 @@ module vga_controller(  iRST_n,
         offsetRight = 0;
         height = 0;
         blockType = 0;
+        // grid init
+        grid[295] = 1;
+        grid[0] = 1;
     end
 
 ////
@@ -85,23 +92,30 @@ module vga_controller(  iRST_n,
 
     LFSR pseudoRandomGenerator(randomNum, 1'b1, iVGA_CLK);
     always@(*) begin
-        if (stop)
+        if (stop) begin
             blockType <= randomNum % 5;
+        end
     end
 
     /*************************************
      * Pattern tests
      *************************************/
     shape sp(addr_x, addr_y, ref_x, ref_y, blockNeighbors, 
-            en_block[0], en_block[1]);
-    // grid background(addr_x, addr_y, static, en1, en2); // static[29:0][9:0]
+            shape_en[0], shape_en[1]);
+
+    // static blocks, generate by grid
+    static_block stablock(addr_x, addr_y, grid, 
+                    static_block_en[0], static_block_en[1]);
+
+    assign en_block[1] = shape_en[1] | static_block_en[1];
+    assign en_block[0] = shape_en[0] | static_block_en[0];
+
     // square sq(addr_x, addr_y, ref_x, ref_y, en_0[0], en_0[1]);
     // longBar lb(addr_x, addr_y, ref_x, ref_y, en_1[0], en_1[1]);
     // TBar tb(addr_x, addr_y, ref_x, ref_y, en_2[0], en_2[1]);
     // ZBlock zb(addr_x, addr_y, ref_x, ref_y, en_3[0], en_3[1]);
     // SBlock sb(addr_x, addr_y, ref_x, ref_y, en_4[0], en_4[1]);
 
-    // assign blockNeighbors = 12'hFFF;
     always@(*) begin
         case(blockType)
             0 : blockNeighbors = 12'h0C6;  // square
@@ -140,31 +154,82 @@ module vga_controller(  iRST_n,
     //     end   
     // end
 
+    // stop sign
+    stop_sign(blockNeighbors, ref_x, ref_y, stopSign); // needs grid as input 
+
+    // always@(posedge VGA_CLK_n) begin
+    //     if(counter == 10000000) begin
+    //         if(!stop) begin
+    //             ref_y <= ref_y + 16;
+    //         end
+    //     end
+    //     else begin
+    //         ref_y = 0;
+    //     end
+    // end
+
     // falling pieces
     always@(posedge VGA_CLK_n) begin
         if(counter == 10000000 && !stop) begin
-            // ref_y <= (ref_y + height * size == 480) ? 480 - height * size : 
-                    // ref_y + 16;
-            ref_y <= ref_y + 16;
-            // ref_x, ref_y => 4 coordinates => bottom line
-            stop  <= (ref_y + height * size == 480) ? 1 : 0;
+            ref_y <= ref_y + size;
+            stop <= stopSign;
         end
         else if(stop) begin
-            ref_y = 0;
-            stop = 0;
+            ref_y <= 0;
+            stop <= 0;
         end
     end
 
-// key binding
+    always@(posedge VGA_CLK_n) begin
+        if(stop) begin
+            grid[gridNum] <= 1'b1;  // ref block, always 1
+
+            if(blockNeighbors[0])
+                grid[gridNum - 1] <= 1'b1;
+
+            if(blockNeighbors[2])
+                grid[gridNum + 1] <= 1'b1;
+
+            if(blockNeighbors[3])
+                grid[gridNum + 2] <= 1'b1;
+
+            if(blockNeighbors[4])
+                grid[gridNum + 3] <= 1'b1;
+
+            if(blockNeighbors[5])
+                grid[gridNum + 9] <= 1'b1;
+
+            if(blockNeighbors[6])
+                grid[gridNum + 10] <= 1'b1;
+
+            if(blockNeighbors[7])
+                grid[gridNum + 11] <= 1'b1;
+
+            if(blockNeighbors[8])
+                grid[gridNum + 19] <= 1'b1;
+
+            if(blockNeighbors[9])
+                grid[gridNum + 20]   <= 1'b1;
+
+            if(blockNeighbors[10])
+                grid[gridNum + 21] <= 1'b1;
+
+            if(blockNeighbors[11])
+                grid[gridNum + 30]   <= 1'b1;
+        end
+    end
+
+
+    // key binding
     always@(posedge VGA_CLK_n) begin
         if ( key_en ) begin
             case(key_in)
                 // 8'h75 : ref_y = (ref_y == 0) ? 0 : ref_y - 10;
                 // 8'h72 : ref_y = ref_y + 16;
                 8'h6b : ref_x = (ref_x == 240) ? 
-                        240 + offsetLeft  * size : ref_x - 16;
+                        240 + offsetLeft  * size : ref_x - size;
                 8'h74 : ref_x = (ref_x + offsetRight * size == 400) ? 
-                        400 - offsetRight * size : ref_x + 16;
+                        400 - offsetRight * size : ref_x + size;
             endcase
         end
     end
@@ -181,6 +246,7 @@ module vga_controller(  iRST_n,
 /////////////////////////
 //////Add switch-input logic here
     decoder decode(ADDR, addr_x, addr_y); // ADDR => x, y coordinate
+    coord2ind coordinate2gridNum(ref_x, ref_y, gridNum); // ref x y to index
 
     // first edge, then block
     mux_24bit mux_block_edge (bgr_data_raw, 24'h000000, en_block[1], bg_edge);

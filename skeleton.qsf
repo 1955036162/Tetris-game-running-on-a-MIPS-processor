@@ -162,6 +162,12 @@ set_location_assignment PIN_H21 -to leds[4]
 set_location_assignment PIN_G20 -to leds[5]
 set_location_assignment PIN_G22 -to leds[6]
 set_location_assignment PIN_G21 -to leds[7]
+set_global_assignment -name VERILOG_FILE static_block.v
+set_global_assignment -name VERILOG_FILE ind2coord.v
+set_global_assignment -name VERILOG_FILE coord2ind.v
+set_global_assignment -name VERILOG_FILE ref2ind.v
+set_global_assignment -name VERILOG_FILE stop_sign.v
+set_global_assignment -name VERILOG_FILE shape.v
 set_global_assignment -name VERILOG_FILE ZBlock.v
 set_global_assignment -name VERILOG_FILE TBar.v
 set_global_assignment -name VERILOG_FILE square.v

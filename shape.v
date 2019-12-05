@@ -1,6 +1,6 @@
 module shape(
-    input [9:0] addr_x, addr_y,
-    input [9:0] ref_x, ref_y,
+    input [9:0]  addr_x, addr_y,
+    input [9:0]  ref_x, ref_y,
     input [11:0] blockNeighbors,
     output toShowShapeInner, toShowShapeEdge
     );
