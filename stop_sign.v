@@ -22,12 +22,11 @@ module stop_sign(
         else if(blockNeighbors[1]  && grid[gridNum+10]) stop = 1;
         else if(blockNeighbors[0]  && grid[gridNum+9] ) stop = 1;
 
-        else if(blockNeighbors[11]   && ref_y + 4*size == 480) stop = 1;
-        else if(blockNeighbors[10:8] && ref_y + 3*size == 480) stop = 1;
-        else if(blockNeighbors[7:5]  && ref_y + 2*size == 480) stop = 1;
-        else if(blockNeighbors[4:0]  && ref_y +   size == 480) stop = 1;
+        else if(blockNeighbors[11]   && ref_y + 4*size >= 480) stop = 1;
+        else if(blockNeighbors[10:8] && ref_y + 3*size >= 480) stop = 1;
+        else if(blockNeighbors[7:5]  && ref_y + 2*size >= 480) stop = 1;
+        else if(blockNeighbors[4:0]  && ref_y +   size >= 480) stop = 1;
         else stop = 0;
     end
-
 
 endmodule
