@@ -165,6 +165,18 @@ set_location_assignment PIN_G21 -to leds[7]
 set_global_assignment -name PARTITION_NETLIST_TYPE SOURCE -section_id Top
 set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id Top
 set_global_assignment -name PARTITION_COLOR 16764057 -section_id Top
+set_global_assignment -name VERILOG_FILE stop_right.v
+set_global_assignment -name VERILOG_FILE regfile.v
+set_global_assignment -name VERILOG_FILE program_counter.v
+set_global_assignment -name VERILOG_FILE processor_skeleton.v
+set_global_assignment -name VERILOG_FILE mux_5bit.v
+set_global_assignment -name VERILOG_FILE mux_4_1_32bit.v
+set_global_assignment -name VERILOG_FILE mux_32bit.v
+set_global_assignment -name VERILOG_FILE mux_1bit.v
+set_global_assignment -name VERILOG_FILE clock_divider.v
+set_global_assignment -name VERILOG_FILE alu_plusn.v
+set_global_assignment -name VERILOG_FILE alu_plus1.v
+set_global_assignment -name VERILOG_FILE alu.v
 set_global_assignment -name VERILOG_FILE stop_left.v
 set_global_assignment -name VERILOG_FILE border.v
 set_global_assignment -name VERILOG_FILE static_block.v

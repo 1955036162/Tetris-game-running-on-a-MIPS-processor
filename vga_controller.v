@@ -11,7 +11,11 @@ module vga_controller(  iRST_n,
                         oVS,
                         b_data,
                         g_data,
-                        r_data);
+                        r_data,
+                        data_readReg1,
+                        addPoints,
+                        fromGame
+                        );
 
     input [7:0] key_in;
     input key_en;
@@ -24,6 +28,10 @@ module vga_controller(  iRST_n,
     output [7:0] b_data;
     output [7:0] g_data;
     output [7:0] r_data;
+    // self defined
+    input  [31:0] data_readReg1;
+    output reg [2:0] addPoints;
+    output reg [1:0] fromGame; // fG[0] for points, fG[1] for blockType
 
 ///////////// wires
     // wire [1:0] en_0, en_1, en_2, en_3, en_4;
@@ -43,33 +51,28 @@ module vga_controller(  iRST_n,
     wire gameOver;
     wire en_border;
 
-
 ///////////// Registers
     reg [18:0] ADDR;
     reg [23:0] bgr_data;
     reg [9:0]  ref_x, ref_y;
     reg [23:0] counter;
-    // no need in the future
-    reg [2:0]  offsetLeft, offsetRight;
     /////////////////
     reg [2:0]   blockType;
     reg [11:0]  blockNeighbors;
     reg [299:0] grid;
-
-    integer i, j;
+    reg [2:0]   pointCounter;
 
     parameter size = 16;
     parameter GRIDNUM = 299;
-    parameter frequency = 10000000;
+    parameter FREQUENCY = 10000000;
 
     // initialize registers
     initial begin
         ref_x = 320;
         ref_y = 0;
-        offsetLeft = 0;
-        offsetRight = 0;
-        blockType = 0;
+        blockType = 0; // square
         grid = 0;
+        pointCounter = 0;
     end
 
 ////
@@ -117,7 +120,7 @@ module vga_controller(  iRST_n,
 
     // counter
     always@(posedge iVGA_CLK) begin
-        if (counter == frequency)
+        if (counter == FREQUENCY)
             counter <= 0;
         else
             counter = counter + 1;
@@ -130,14 +133,14 @@ module vga_controller(  iRST_n,
 
     // falling pieces
     always@(posedge VGA_CLK_n) begin
-        if(counter == frequency) begin
+        if(counter == FREQUENCY) begin
             if(!stopSign) begin
                 ref_y = ref_y + size;
             end
             else begin
                 ref_y = 0;
                 ref_x = 320;
-                blockType = randomNum % 5;
+                // blockType = randomNum % 5;
             end
         end
         else if(key_en && !stopSign) begin
@@ -161,66 +164,72 @@ module vga_controller(  iRST_n,
     // end
 
     always@(posedge VGA_CLK_n) begin
-        if(stopSign) begin
-            grid[gridNum] <= 1'b1;  // ref block, always 1
+        if(counter % 4 == 0) begin
+            // store static blocks
+            if(stopSign) begin
+                grid[gridNum] <= 1'b1;  // ref block, always 1
 
-            if(blockNeighbors[0])
-                grid[gridNum - 1] <= 1'b1;
+                if(blockNeighbors[0])
+                    grid[gridNum - 1] <= 1'b1;
 
-            if(blockNeighbors[2])
-                grid[gridNum + 1] <= 1'b1;
+                if(blockNeighbors[2])
+                    grid[gridNum + 1] <= 1'b1;
 
-            if(blockNeighbors[3])
-                grid[gridNum + 2] <= 1'b1;
+                if(blockNeighbors[3])
+                    grid[gridNum + 2] <= 1'b1;
 
-            if(blockNeighbors[4])
-                grid[gridNum + 3] <= 1'b1;
+                if(blockNeighbors[4])
+                    grid[gridNum + 3] <= 1'b1;
 
-            if(blockNeighbors[5])
-                grid[gridNum + 9] <= 1'b1;
+                if(blockNeighbors[5])
+                    grid[gridNum + 9] <= 1'b1;
 
-            if(blockNeighbors[6])
-                grid[gridNum + 10] <= 1'b1;
+                if(blockNeighbors[6])
+                    grid[gridNum + 10] <= 1'b1;
 
-            if(blockNeighbors[7])
-                grid[gridNum + 11] <= 1'b1;
+                if(blockNeighbors[7])
+                    grid[gridNum + 11] <= 1'b1;
 
-            if(blockNeighbors[8])
-                grid[gridNum + 19] <= 1'b1;
+                if(blockNeighbors[8])
+                    grid[gridNum + 19] <= 1'b1;
 
-            if(blockNeighbors[9])
-                grid[gridNum + 20] <= 1'b1;
+                if(blockNeighbors[9])
+                    grid[gridNum + 20] <= 1'b1;
 
-            if(blockNeighbors[10])
-                grid[gridNum + 21] <= 1'b1;
+                if(blockNeighbors[10])
+                    grid[gridNum + 21] <= 1'b1;
 
-            if(blockNeighbors[11])
-                grid[gridNum + 30] <= 1'b1;
-        end
-        else begin
-            for(i=0; i<GRIDNUM; i = i+10) begin
-                if(grid[i +: 10]==10'b1111111111) begin
-                    // grid [i +: 10] = 10'b0000000000;
-                    for(j=i; j>=10; j = j-10) begin
-                        grid[j +: 10] = grid[j-10 +: 10];
+                if(blockNeighbors[11])
+                    grid[gridNum + 30] <= 1'b1;
+            end
+            // clear lines
+            else begin
+                // for loop, detect full lines
+                integer i, j;
+                for(i=0; i<GRIDNUM; i = i+10) begin
+                    // one line is full
+                    if(grid[i +: 10]==10'b1111111111) begin
+                        // add 1 point
+                        pointCounter = pointCounter + 1;
+                        // lines fall
+                        for(j=i; j>=10; j = j-10) begin
+                            grid[j +: 10] = grid[j-10 +: 10];
+                        end
                     end
+                end
+                if (pointCounter) begin
+                    addPoints = pointCounter;
+                    fromGame[0] = 1;
+                    // reset pointCounter
+                    pointCounter = 0;
+                end
+                else begin
+                    fromGame[0] = 0;
+                    addPoints = 0;
                 end
             end
         end
     end
-
-    // key binding
-    // always@(posedge VGA_CLK_n) begin
-    //     if ( key_en ) begin
-    //         case(key_in)
-    //             // 8'h72 : ref_y = ref_y + 16;
-    //             8'h6b : ref_x = stopLeft && !st ? 
-    //                     240 + offsetLeft  * size : ref_x - size;
-    //             8'h74 : ref_x = (ref_x + offsetRight * size == 400) ? 
-    //                     400 - offsetRight * size : ref_x + size;
-    //         endcase
-    //     end
-    // end
 
     decoder   decode(ADDR, addr_x, addr_y); // ADDR => x, y coordinate
     coord2ind coordinate2gridNum(ref_x, ref_y, gridNum); // ref x y to index

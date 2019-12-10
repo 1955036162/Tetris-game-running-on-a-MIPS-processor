@@ -1,26 +1,18 @@
--- Copyright (C) 1991-2009 Altera Corporation
--- Your use of Altera Corporation's design tools, logic functions 
--- and other software and tools, and its AMPP partner logic 
--- functions, and any output files from any of the foregoing 
--- (including device programming or simulation files), and any 
--- associated documentation or information are expressly subject 
--- to the terms and conditions of the Altera Program License 
--- Subscription Agreement, Altera MegaCore Function License 
--- Agreement, or other applicable license agreement, including, 
--- without limitation, that your use is for the sole purpose of 
--- programming logic devices manufactured by Altera and sold by 
--- Altera or its authorized distributors.  Please refer to the 
--- applicable agreement for further details.
+DEPTH = 4096;
+WIDTH = 32;
+ADDRESS_RADIX = DEC;
+DATA_RADIX = BIN;
+CONTENT
+BEGIN
+0000 : 00010111010000000000000000000001; -- 	bne $r29, $r0 ADDSCORE # if r29 != 0, r29 = addPoints
 
--- Quartus II generated Memory Initialization File (.mif)
+0001 : 00001000000000000000000000000000; -- 	j LOOP
 
-WIDTH=32;
-DEPTH=4096;
+0002 : 00000000010000111101000000000000; -- 	add $r1, $r1, $r29  # add points to score, r1
 
-ADDRESS_RADIX=HEX;
-DATA_RADIX=HEX;
+0003 : 00000111010000000000000000000000; -- 	add $r29, $r0, $r0	# reset r29
 
-CONTENT BEGIN
-	0000  :   000ABCD3;
-	[0001..0FFF]  :   00000000;
+0004 : 00001000000000000000000000000000; -- 	j LOOP
+
+[0005..4095] : 00000000000000000000000000000000;
 END;

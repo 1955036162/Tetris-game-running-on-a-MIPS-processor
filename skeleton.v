@@ -26,8 +26,8 @@ module skeleton(resetn,
     input           CLOCK_50;
 
     ////////////////////////    PS2 ////////////////////////////
-    input           resetn;
-    inout           ps2_data, ps2_clock;
+    input            resetn;
+    inout            ps2_data, ps2_clock;
     
     ////////////////////////    LCD and Seven Segment   ////////////////////////////
     output           lcd_rw, lcd_en, lcd_rs, lcd_on, lcd_blon;
@@ -42,6 +42,11 @@ module skeleton(resetn,
     wire    [7:0]    ps2_key_data;
     wire             ps2_key_pressed;
     wire    [7:0]    ps2_out;
+    // self defined
+    wire    [2:0]    addPoints;
+    wire    [1:0]    fromGame;
+    wire    [31:0]   data_readReg1;
+
     reg     [7:0]    ps2_correct;
 
     // clock divider (by 5, i.e., 10 MHz)
@@ -52,23 +57,14 @@ module skeleton(resetn,
     //assign clock = inclock;
 
     // your processor
-    processor myprocessor(clock, ~resetn, /*ps2_key_pressed, ps2_out, lcd_write_en, lcd_write_data,*/ debug_data_in, debug_addr);
+    // processor_skeleton myprocessor(clock, ~resetn, /*ps2_key_pressed, ps2_out, lcd_write_en, lcd_write_data,*/ debug_data_in, debug_addr);
+    processor_skeleton myprocessor(clock, 1'b0, addPoints, fromGame, data_readReg1);
 
     // keyboard controller
     PS2_Interface myps2(clock, resetn, ps2_clock, ps2_data, ps2_key_data, ps2_key_pressed, ps2_out);
 
-    always @(*) begin
-        case (ps2_out)
-            8'h1c  : ps2_correct <= 8'h41;
-            8'h32  : ps2_correct <= 8'h42;
-            8'h21  : ps2_correct <= 8'h43;
-            8'h23  : ps2_correct <= 8'h44;
-            default: ps2_correct <= 8'h00;
-        endcase
-    end
-
     // lcd controller
-    lcd mylcd(clock, ~resetn, 1'b1, ps2_correct, lcd_data, lcd_rw, lcd_en, lcd_rs, lcd_on, lcd_blon);
+    lcd mylcd(clock, ~resetn, 1'b1, ps2_out, lcd_data, lcd_rw, lcd_en, lcd_rs, lcd_on, lcd_blon);
 
     // example for sending ps2 data to the first two seven segment displays
     Hexadecimal_To_Seven_Segment hex1(ps2_out[3:0], seg1);
@@ -79,8 +75,8 @@ module skeleton(resetn,
     Hexadecimal_To_Seven_Segment hex4(4'b0, seg4);
     Hexadecimal_To_Seven_Segment hex5(4'b0, seg5);
     Hexadecimal_To_Seven_Segment hex6(4'b0, seg6);
-    Hexadecimal_To_Seven_Segment hex7(4'b0, seg7);
-    Hexadecimal_To_Seven_Segment hex8(4'b0, seg8);
+    Hexadecimal_To_Seven_Segment hex7(data_readReg1[3:0], seg7);
+    Hexadecimal_To_Seven_Segment hex8(data_readReg1[7:4], seg8);
 
     // some LEDs that you could use for debugging if you wanted
     assign leds = 8'b00101011;
@@ -101,7 +97,11 @@ module skeleton(resetn,
                                  .oVS(VGA_VS),
                                  .b_data(VGA_B),
                                  .g_data(VGA_G),
-                                 .r_data(VGA_R)
+                                 .r_data(VGA_R),
+                                 // self defined
+                                 .addPoints(addPoints),
+                                 .fromGame(fromGame),
+                                 .data_readReg1(data_readReg1)
                                  );
 
 endmodule
