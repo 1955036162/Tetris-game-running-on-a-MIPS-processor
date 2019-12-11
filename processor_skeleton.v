@@ -2,8 +2,10 @@ module processor_skeleton(
     input clock, reset,
     // self defined
     input  [2:0]  addPoints,
+    input  [3:0]  blockType,
+    input         rotate,
     input  [1:0]  fromGame,
-    output [31:0] data_readReg1//, data_readReg2
+    output [31:0] data_readReg1, data_readReg2, data_readReg3
     );
 
     wire clock_4;
@@ -62,9 +64,14 @@ module processor_skeleton(
         data_writeReg,
         data_readRegA,
         data_readRegB,
+        // self defined
         addPoints,
+        blockType,
+        rotate,
         fromGame,
-        data_readReg1
+        data_readReg1,
+        data_readReg2,
+        data_readReg3
     );
 
     /** PROCESSOR **/

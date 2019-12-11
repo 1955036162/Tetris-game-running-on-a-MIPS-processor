@@ -13,8 +13,12 @@ module vga_controller(  iRST_n,
                         g_data,
                         r_data,
                         data_readReg1,
+                        data_readReg2,
                         addPoints,
-                        fromGame
+                        blockType,
+                        rotate,
+                        fromGame,
+                        fromProc
                         );
 
     input [7:0] key_in;
@@ -29,12 +33,14 @@ module vga_controller(  iRST_n,
     output [7:0] g_data;
     output [7:0] r_data;
     // self defined
-    input  [31:0] data_readReg1;
+    input  [31:0] data_readReg1, data_readReg2;
+    input  [31:0] fromProc;
+    output reg       rotate;
     output reg [2:0] addPoints;
+    output reg [3:0] blockType;
     output reg [1:0] fromGame; // fG[0] for points, fG[1] for blockType
 
 ///////////// wires
-    // wire [1:0] en_0, en_1, en_2, en_3, en_4;
     wire [9:0] addr_x, addr_y;
     wire VGA_CLK_n;
     wire [7:0] index;
@@ -44,9 +50,10 @@ module vga_controller(  iRST_n,
     wire [23:0] bg_edge, bg_inner;
     wire [12:0] randomNum;
     wire [1:0]  en_block; // en[0] for inner, en[1] for edge
-    wire [1:0]  shape_en, static_block_en;
+    wire [1:0]  shape_en, static_block_en, dlow_en, dhigh_en;
     wire stopSign;
     wire stopLeft, stopRight;
+    wire stopRotate;
     wire [8:0] gridNum;
     wire gameOver;
     wire en_border;
@@ -57,10 +64,11 @@ module vga_controller(  iRST_n,
     reg [9:0]  ref_x, ref_y;
     reg [23:0] counter;
     /////////////////
-    reg [2:0]   blockType;
     reg [11:0]  blockNeighbors;
     reg [299:0] grid;
     reg [2:0]   pointCounter;
+    reg key_pressed;
+    // reg stopRotate;
 
     parameter size = 16;
     parameter GRIDNUM = 299;
@@ -73,6 +81,8 @@ module vga_controller(  iRST_n,
         blockType = 0; // square
         grid = 0;
         pointCounter = 0;
+        key_pressed = 1'b0;
+        // stopRotate = 1'b0;
     end
 
 ////
@@ -103,18 +113,27 @@ module vga_controller(  iRST_n,
     shape sp(addr_x, addr_y, ref_x, ref_y, blockNeighbors, 
             shape_en[0], shape_en[1]);
     // static blocks, generate by grid
-    static_block stablock(addr_x, addr_y, grid, 
+    static_block stblock(addr_x, addr_y, grid, 
                     static_block_en[0], static_block_en[1]);
+    // score
+    digit dlow (addr_x, addr_y, 576, 16, data_readReg1[6:0] % 10, dlow_en[0],  dlow_en[1]);
+    digit dhigh(addr_x, addr_y, 512, 16, data_readReg1[6:0] / 10, dhigh_en[0], dhigh_en[1]);
     // display both falling and static blocks
-    assign en_block = shape_en | static_block_en;
+    assign en_block = shape_en & {!gameOver, !gameOver} | static_block_en | dlow_en | dhigh_en;
 
     always@(posedge VGA_CLK_n) begin
         case(blockType)
             0 : blockNeighbors = 12'h0C6;  // square
-            1 : blockNeighbors = 12'h01E;  // long bar
-            2 : blockNeighbors = 12'h0E2;  // Tbar
-            3 : blockNeighbors = 12'h0C3;  // ZBlock
-            4 : blockNeighbors = 12'h066;  // SBlock
+            1 : blockNeighbors = 12'h01E;  // long bar horizontal
+            2 : blockNeighbors = 12'hA42;  // long bar vertical
+            3 : blockNeighbors = 12'h0E2;  // Tbar face up
+            4 : blockNeighbors = 12'h2C2;  // Tbar face right
+            5 : blockNeighbors = 12'h047;  // Tbar face down
+            6 : blockNeighbors = 12'h262;  // Tbar face left
+            7 : blockNeighbors = 12'h0C3;  // ZBlock horizontal
+            8 : blockNeighbors = 12'h162;  // ZBlock vertical
+            9 : blockNeighbors = 12'h066;  // SBlock horizontal
+            10: blockNeighbors = 12'h4C2;  // SBlock vertical
         endcase
     end
 
@@ -127,9 +146,10 @@ module vga_controller(  iRST_n,
     end
 
     // stop sign
-    stop_sign (blockNeighbors, ref_y, gridNum, grid, stopSign);
-    stop_left (blockNeighbors, ref_x, gridNum, grid, stopLeft);
-    stop_right(blockNeighbors, ref_x, gridNum, grid, stopRight);
+    stop_sign   sdsign(blockNeighbors, ref_y, gridNum, grid, stopSign);
+    stop_left   slsign(blockNeighbors, ref_x, gridNum, grid, stopLeft);
+    stop_right  srsign(blockNeighbors, ref_x, gridNum, grid, stopRight);
+    stop_rotate srtsign(data_readReg2[3:0], ref_x, ref_y, gridNum, grid, stopRotate);
 
     // falling pieces
     always@(posedge VGA_CLK_n) begin
@@ -140,33 +160,35 @@ module vga_controller(  iRST_n,
             else begin
                 ref_y = 0;
                 ref_x = 320;
-                // blockType = randomNum % 5;
+                blockType = randomNum % 11;
             end
         end
-        else if(key_en && !stopSign) begin
-            case(key_in)
-                8'h72 : ref_y = ref_y + 16;
-                8'h6b : ref_x = stopLeft  ? ref_x+0 : ref_x - size;
-                8'h74 : ref_x = stopRight ? ref_x+0 : ref_x + size;
-            endcase // key_in
+        else begin
+            if(key_en) begin
+            key_pressed = 1'b1;
+            end
+            else if(key_pressed && !stopSign) begin
+                case(key_in)
+                    8'h75 : begin rotate = 1'b1; fromGame[1] = 1'b1; 
+                                  key_pressed = 1'b0;
+                            end
+                    8'h72 : begin ref_y = ref_y + size;                       key_pressed = 1'b0; end
+                    8'h6b : begin ref_x = stopLeft  ? ref_x+0 : ref_x - size; key_pressed = 1'b0; end
+                    8'h74 : begin ref_x = stopRight ? ref_x+0 : ref_x + size; key_pressed = 1'b0; end
+                endcase
+            end
+            else begin
+                fromGame[1] = 1'b0;
+                rotate = 1'b0;
+            end
+            blockType = stopRotate || !fromProc[0] ? blockType+0 : data_readReg2[3:0];
         end
     end
-
-    // always@(posedge VGA_CLK_n) begin
-    //     if(counter == 10000000) begin
-    //         if(!stopSign) begin
-    //             ref_y = ref_y + size;
-    //         end
-    //         else begin
-    //             ref_y = 0;
-    //         end
-    //     end
-    // end
 
     always@(posedge VGA_CLK_n) begin
         if(counter % 4 == 0) begin
             // store static blocks
-            if(stopSign) begin
+            if(stopSign && !gameOver) begin
                 grid[gridNum] <= 1'b1;  // ref block, always 1
 
                 if(blockNeighbors[0])
@@ -219,13 +241,13 @@ module vga_controller(  iRST_n,
                 end
                 if (pointCounter) begin
                     addPoints = pointCounter;
-                    fromGame[0] = 1;
+                    fromGame[0] = 1'b1;
                     // reset pointCounter
-                    pointCounter = 0;
+                    pointCounter = 1'b0;
                 end
                 else begin
-                    fromGame[0] = 0;
-                    addPoints = 0;
+                    fromGame[0] = 1'b0;
+                    addPoints = 1'b0;
                 end
             end
         end
@@ -233,17 +255,18 @@ module vga_controller(  iRST_n,
 
     decoder   decode(ADDR, addr_x, addr_y); // ADDR => x, y coordinate
     coord2ind coordinate2gridNum(ref_x, ref_y, gridNum); // ref x y to index
-    border bd(addr_x, en_border);
+    border    bd(addr_x, en_border);
 
     /* MUXES */
     // first edge, then block
-    mux_24bit mux_block_edge (bgr_data_raw, 24'h000000, en_block[1]&(!gameOver), bg_edge);
-    mux_24bit mux_block_inner(bg_edge,      24'h00004F, en_block[0]&(!gameOver), bg_inner);
+    mux_24bit mux_block_edge (bgr_data_raw, 24'h000000, en_block[1], bg_edge);
+    mux_24bit mux_block_inner(bg_edge,      24'h00004F, en_block[0], bg_inner);
     mux_24bit mux_border(bg_inner, 24'h004F00, en_border, out);
 //////////////////////////
 
     // if reach the top, game over
-    assign gameOver = grid[9:0] ? 1 : 0;
+    game_over ggwp(blockNeighbors, gridNum, grid, gameOver);
+    // assign gameOver = grid[9:0] ? 1 : 0;
 
 //////INDEX addr.
     assign VGA_CLK_n = ~iVGA_CLK;

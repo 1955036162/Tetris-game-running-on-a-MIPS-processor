@@ -44,8 +44,10 @@ module skeleton(resetn,
     wire    [7:0]    ps2_out;
     // self defined
     wire    [2:0]    addPoints;
+    wire             rotate;
     wire    [1:0]    fromGame;
-    wire    [31:0]   data_readReg1;
+    wire    [3:0]    blockType;
+    wire    [31:0]   data_readReg1, data_readReg2, data_readReg3;
 
     reg     [7:0]    ps2_correct;
 
@@ -58,10 +60,20 @@ module skeleton(resetn,
 
     // your processor
     // processor_skeleton myprocessor(clock, ~resetn, /*ps2_key_pressed, ps2_out, lcd_write_en, lcd_write_data,*/ debug_data_in, debug_addr);
-    processor_skeleton myprocessor(clock, 1'b0, addPoints, fromGame, data_readReg1);
+    processor_skeleton myprocessor(clock, 1'b0, addPoints, blockType, rotate, fromGame, 
+                                    data_readReg1, data_readReg2, data_readReg3);
 
     // keyboard controller
     PS2_Interface myps2(clock, resetn, ps2_clock, ps2_data, ps2_key_data, ps2_key_pressed, ps2_out);
+
+//    always@(*) begin
+//        case(ps2_out)
+//            8'h75 : key_up = 1'b1;
+//            8'h72 : key_down = 1'b1;
+//            8'h6b : key_left = 1'b1;
+//            8'h74 : key_right = 1'b1;
+//        endcase // ps2_out
+//    end
 
     // lcd controller
     lcd mylcd(clock, ~resetn, 1'b1, ps2_out, lcd_data, lcd_rw, lcd_en, lcd_rs, lcd_on, lcd_blon);
@@ -88,10 +100,10 @@ module skeleton(resetn,
                                  .iVGA_CLK(VGA_CLK),
                                  .key_in(ps2_out),
                                  .key_en(ps2_key_pressed),
-                                 // .key_up(key_up),
-                                 // .key_down(key_down),
-                                 // .key_left(key_left),
-                                 // .key_right(key_right),
+//                                 .key_up(key_up),
+//                                 .key_down(key_down),
+//                                 .key_left(key_left),
+//                                 .key_right(key_right),
                                  .oBLANK_n(VGA_BLANK),
                                  .oHS(VGA_HS),
                                  .oVS(VGA_VS),
@@ -100,8 +112,12 @@ module skeleton(resetn,
                                  .r_data(VGA_R),
                                  // self defined
                                  .addPoints(addPoints),
+                                 .blockType(blockType),
+                                 .rotate(rotate),
                                  .fromGame(fromGame),
-                                 .data_readReg1(data_readReg1)
+                                 .data_readReg1(data_readReg1),
+                                 .data_readReg2(data_readReg2),
+                                 .fromProc(data_readReg3)
                                  );
 
 endmodule

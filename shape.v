@@ -7,8 +7,6 @@ module shape(
 
     parameter size = 16;
 
-    // assign blockNeighbors[1] = 1'b1;
-
     wire [11:0] en_i_origin, en_e_origin, en_i, en_e;
 
     block b0(addr_x, addr_y, ref_x - size, ref_y, en_i_origin[0], en_e_origin[0]);
