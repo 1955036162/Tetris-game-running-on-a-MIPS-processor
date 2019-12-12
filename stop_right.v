@@ -26,6 +26,7 @@ module stop_right(
             && ref_x + 2*size >= 400 ) stop = 1;
         else if( (blockNeighbors[1] || blockNeighbors[6] || blockNeighbors[9] || 
             blockNeighbors[11]) && ref_x + size >= 400 ) stop = 1;
+        
         else stop = 0;
     end
 

@@ -9,7 +9,7 @@ module stop_sign(
     parameter size = 16;
 
     always@(*) begin
-        if(blockNeighbors[11] && grid[gridNum+40]) stop = 1;
+        if     (blockNeighbors[11] && grid[gridNum+40]) stop = 1;
         else if(blockNeighbors[10] && grid[gridNum+31]) stop = 1;
         else if(blockNeighbors[9]  && grid[gridNum+30]) stop = 1;
         else if(blockNeighbors[8]  && grid[gridNum+29]) stop = 1;
