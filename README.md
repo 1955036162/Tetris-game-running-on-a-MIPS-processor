@@ -1,7 +1,7 @@
 # Tetris game running on a MIPS processor
 Duke ECE Five-Fifty Fundamentals of Computer Systems and Engineering - Final Project
 
-Team Members: Yuchuan Li, Yuanrui Zhang
+Author: Yuchuan Li, Yuanrui Zhang
 
 This project mainly contains two parts:
  - A five stage pipelined processor built from scratch with a simplified MIPS-like instruction set(running on Altera FPGA). (individual work by Yuchuan Li)
